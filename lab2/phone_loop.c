@@ -27,9 +27,9 @@ int main(int argc, char **argv) {
     // scanf("\n%d", &integer);
     if (integer == -1){
         printf("%s\n", phone);
-    }else if(integer >= 0 && integer <= 9){
+    }else if((integer >= 0) && (integer <= 9)){
         printf("%c\n", phone[integer]);
-    }else if (integer <= -1 | integer >= 9){
+    }else if ((integer <= -1 | integer >= 9)){
         printf("ERROR\n");
         return 1;
     }
