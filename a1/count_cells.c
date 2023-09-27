@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
      * If not, returning 1 with error message
      */
     if ((argc != 2) && (argc != 3)){
-        fprintf(stderr, "Enter 2 or 3 parameters (3rd parameter should be -p but optional)\n");
+        fprintf(stderr, "Not the right number of parameters. \nEnter: count_cells <imagefile.txt> [-p]\n");
         return 1;
 
     }
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 
         } else{
             // printing images and counting cells 
-            print_image(num_rows, num_cols, image);       
+            print_image(num_rows, num_cols, image);
             count_cells(num_rows, num_cols, image);
 
     }
