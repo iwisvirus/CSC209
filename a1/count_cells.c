@@ -7,26 +7,65 @@ void read_image(int num_rows, int num_cols,
                 
 void print_image(int num_rows, int num_cols, int arr[num_rows][num_cols]);
 
-// TODO add the function prototype for count_cells
+void group_cells(int num_rows, int num_cols, int arr[num_rows][num_cols], int rows, int cols, int colour);
 
+void count_cells(int num_rows, int num_cols, int arr[num_rows][num_cols]);
 
 int main(int argc, char **argv) {
-    // Print a message to stderr and exit with an argument of 1
-    // if there are not the right number of parameters, or if
-    // there is a second argument that is not -p
 
-    // The following snippet helps you check your arguments.
-    // strcmp returns 0 if the strings are equal and
-    // you haven't learned about this yet.
-    // Notice that this is NOT COMPLETE, but we have given you this
-    // much to show you how to check '-p' and print to stderr.
-    // Be careful with the array indexing!
-    if (strcmp(argv[2], "-p") != 0) {
-        fprintf(stderr, "Usage: count_cells <imagefile.txt> [-p]\n");
+    /* Checking if it has the right number of parameters
+     * If not, returning 1 with error message
+     */
+    if ((argc != 2) && (argc != 3)){
+        fprintf(stderr, "Enter 2 or 3 parameters (3rd parameter should be -p but optional)\n");
         return 1;
+
+    }
+    /* If there are 3 arguments, checking if the third argument is -p
+     * If not -p, returning 1 with error message 
+     */
+    if (argc == 3){
+        if (strcmp(argv[2], "-p") != 0) {
+            fprintf(stderr, "Usage: count_cells <imagefile.txt> [-p]\n");
+            return 1;
+        }
     }
 
-    // TODO read and print images, count cells
+    // If the argument conditions are met 
+    if ((argc == 3 && strcmp(argv[2], "-p") == 0) | (argc == 2)){
 
+        // reading files from the first argument implemented 
+        FILE *fp = fopen(argv[1], "r");
+
+        // initializing number of rows and columns
+        int num_rows;
+        int num_cols;
+ 
+        // scanning number of rows and columns of the image
+        fscanf (fp, "%d %d", &num_rows, &num_cols);
+    
+        // creating array to print and read file
+        int image[num_rows][num_cols];
+
+        // reading images 
+        read_image(num_rows, num_cols, image, fp);
+
+        if (argc == 2){
+            // counting cells 
+            count_cells(num_rows, num_cols, image); 
+
+
+        } else{
+            // printing images and counting cells 
+            print_image(num_rows, num_cols, image);       
+            count_cells(num_rows, num_cols, image);
+
+    }
+    // closing file 
+    fclose(fp);
+
+
+    }
+    
     return 0;
 }
