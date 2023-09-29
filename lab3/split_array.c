@@ -12,6 +12,34 @@
 */
 int **split_array(const int *s, int length) {
 
+  int *odd_array;
+  int *even_array;
+  int **whole_array = malloc(sizeof(int) * length);
+
+  odd_array = malloc(sizeof(int) * length/2);
+  int i;
+  for(i = 0; i < length/2; i++){
+    odd_array[i] = s[i * 2 + 1];
+  }
+
+  if (length % 2 == 0 ){
+    even_array = malloc(sizeof(int) * length/2);
+      for (i = 0; i < length/2; i++){
+        even_array[i] = s[2 * i];
+    }
+
+  }else {
+    even_array = malloc(sizeof(int) * (length/2 + 1));
+      for (i = 0; i < length/2 + 1; i++){
+        even_array[i] = s[2 * i];
+    }
+  }
+
+  whole_array[0] = even_array;
+  whole_array[1] = odd_array;
+  
+  return whole_array;
+
 
 }
 
@@ -22,7 +50,13 @@ int **split_array(const int *s, int length) {
  */
 
 int *build_array(char **strs, int size) {
-
+  int *arr = malloc(sizeof(int) * size);
+  int i;
+    for(i = 0; i < size; i++){
+      arr[i] = strtol(strs[i+1], NULL, 10);
+    }
+    
+  return arr;
 
 }
 
@@ -32,8 +66,8 @@ int main(int argc, char **argv) {
        arguments.  Do not add any additional lines of code to the main
        function or make other changes.
      */
-    int *full_array = build_array(/* fill in the arguments*/);
-    int **result = split_array(full_array, /* fill in this argument */);
+    int *full_array = build_array(argv, argc -1);
+    int **result = split_array(full_array, argc-1);
 
     printf("Original array:\n");
     for (int i = 0; i < argc - 1; i++) {
