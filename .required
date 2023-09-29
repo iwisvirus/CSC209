@@ -1,9 +1,9 @@
-lab1/my_commands.sh false
 lab1/compile_all.sh false
-lab2/invest.c false
-lab2/phone_loop.c false
-lab2/phone.c false
+lab1/my_commands.sh false
 lab2/score_card.c false
+lab2/invest.c false
+lab2/phone.c false
+lab2/phone_loop.c false
 a1/count_cells.c false
 a1/image.c false
 lab3/split_array.c false
