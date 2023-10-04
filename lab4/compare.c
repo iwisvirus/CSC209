@@ -40,7 +40,7 @@ int main(int argc, char **argv){
             return 0;
         }
     }
-    printf("same\n");
+    printf("Same\n");
 
     // if(firststring == secondstring){
     //     printf("Same\n");
