@@ -14,3 +14,40 @@
 
     Your main function should return 0, regardless of what's printed.
 */
+int main(int argc, char **argv){
+
+    char *firststring = argv[1];
+    char *secondstring = argv[2];
+    int compare;
+    int i;
+
+    // checking argument numbers 
+    if(argc != 3){
+        fprintf(stderr, "Invalid\n");
+        return 1;
+    }
+
+    // checking longer string 
+    if (strlen(firststring) > strlen(secondstring)){
+        compare = strlen(firststring);
+    }else{
+        compare = strlen(secondstring);
+    }
+    
+    for (i = 0; i < compare; i++) {
+        if (firststring[i] != secondstring[i]){
+            printf("Different\n");
+            return 0;
+        }
+    }
+    printf("same\n");
+
+    // if(firststring == secondstring){
+    //     printf("Same\n");
+    // }else if(firststring != secondstring){
+    //     printf("Different\n");
+    // }
+
+    return 0;
+
+}
