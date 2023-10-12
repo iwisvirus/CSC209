@@ -45,7 +45,7 @@ struct pixel **read_pixel_array(FILE *image, int pixel_array_offset, int width, 
     for (i = 0; i < height; i++){
         for (j = 0; j < width; j++){
             fread(columns[i], 3 * width, 1, image);
-            fseek(image, 0, SEEK_CUR);
+            // fseek(image, 0, SEEK_CUR);
         }
     }
     return columns;
