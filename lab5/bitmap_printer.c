@@ -41,9 +41,9 @@ int main(int argc, char **argv) {
         exit(0);
     }
 
-    // for (int i = 0; i < width; i++){
-    //     free(pixels[i]);
-    // }
+    for (int i = 0; i < height; i++){
+        free(pixels[i]);
+    }
     free(pixels);
 
     return 0;
