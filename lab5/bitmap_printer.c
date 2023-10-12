@@ -36,13 +36,15 @@ int main(int argc, char **argv) {
             print_pixel(pixels[height - 1 - i][width - 1 - j]);
         }
     }
-
-    for (int i = 0; i < height; i++){
-            free(pixels[i]);
+    if (pixels == NULL){
+        printf("Memory not allocated \n");
+        exit(0);
     }
-    free(pixels);
 
-    // Clean up: you need to do this!
+    // for (int i = 0; i < width; i++){
+    //     free(pixels[i]);
+    // }
+    free(pixels);
 
     return 0;
 }
