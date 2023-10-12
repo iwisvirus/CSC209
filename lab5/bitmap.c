@@ -37,16 +37,13 @@ struct pixel **read_pixel_array(FILE *image, int pixel_array_offset, int width, 
     struct pixel *rows = malloc(sizeof(struct pixel) * width);
     struct pixel **columns = malloc(sizeof(rows) * height);
     int i;
-    int j;
     for(i = 0; i < height; i++){
         columns[i] = &rows[i]; 
     }
     fseek(image, pixel_array_offset, SEEK_SET);
     for (i = 0; i < height; i++){
-        for (j = 0; j < width; j++){
             fread(columns[i], 3 * width, 1, image);
             // fseek(image, 0, SEEK_CUR);
-        }
     }
     return columns;
 
