@@ -20,8 +20,13 @@ arch_tree_node* create_tree_node(char *filepath){
         return NULL;
     }
 
-    // TODO create the node
-
+    stat(filepath, &st);
+    arch_tree_node *node = malloc(sizeof(arch_tree_node));
+    node -> name[FILENAME_MAX] = filepath;
+    node -> size = st.st_size;
+    node -> is_directory = S_ISDIR(st.st_mode);
+    node -> next_file = NULL;
+    node -> dir_contents = NULL;
     // return node;
     return NULL;
 }
