@@ -1,6 +1,7 @@
 #include "kar_tree.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void print_help() {
     printf("Usage: kar [COMMAND] [ARCHIVE]\n");
@@ -22,12 +23,35 @@ void print_help() {
 }
 
 int main(int argc, char *argv[]) {
+    
+    // error checking
 
-    // We've given you the usage string
-    // main should only need to check arguments and
-    // call the appropriate functions
+    if ((strcmp(argv[1], "--help") == 0) || (argc < 2)){
+        print_help();
+        exit(0);
+    }
+    char *archive_name = argv[2];
+    int num_files = argc - 3;
+    char **files_to_add = &argv[3];
 
-    print_help();
+
+    if (strcmp(argv[1], "create") == 0){
+        if (argc < 4){
+            print_help();
+            exit (0);
+        }
+
+        create_archive(archive_name, num_files, files_to_add);
+    } else if (strcmp(argv[1], "extract") == 0){
+        if (argc != 3){
+            print_help();
+            exit(0);
+        }
+        extract_archive(archive_name);
+    } else {
+        print_help();
+        exit(0);
+    }
 
     return 0;
 }

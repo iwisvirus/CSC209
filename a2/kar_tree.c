@@ -11,7 +11,12 @@
 #include <string.h>
 
 void free_tree(arch_tree_node *root) {
-    // TODO: This needs to be implemented
+    if (root){
+        free_tree(root -> next_file);
+        free_tree(root -> dir_contents);
+        free(root);
+    }
+
     printf("free_tree not implemented\n");
 }
 
