@@ -25,8 +25,14 @@ void print_help() {
 int main(int argc, char *argv[]) {
     
     // error checking
+    if (argc < 2) {
+        print_help();
+        exit(1);
+    }
 
-    if ((strcmp(argv[1], "--help") == 0) || (argc < 2)){
+    char *call = argv[1];
+
+    if (strcmp(call, "--help") == 0){
         print_help();
         exit(0);
     }
@@ -35,14 +41,14 @@ int main(int argc, char *argv[]) {
     char **files_to_add = &argv[3];
 
 
-    if (strcmp(argv[1], "create") == 0){
+    if (strcmp(call, "create") == 0){
         if (argc < 4){
             print_help();
             exit (0);
         }
 
         create_archive(archive_name, num_files, files_to_add);
-    } else if (strcmp(argv[1], "extract") == 0){
+    } else if (strcmp(call, "extract") == 0){
         if (argc != 3){
             print_help();
             exit(0);

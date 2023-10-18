@@ -59,9 +59,8 @@ int create_archive(char *archive_name, int num_files, char *files_to_add[num_fil
     fclose(archive);
     return 0;
 }
-
 int recursively_add(char *path, arch_tree_node **current, char *archive){
-    only_filename(path);
+    // only_filename(path);
     arch_tree_node *node = create_tree_node(path);
 
     if(node -> is_directory){
