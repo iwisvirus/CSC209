@@ -11,9 +11,18 @@
   NOTE: You must write this function without using any string functions.
   The only function that should depend on string.h is memset.
  */
+// - strncpy
+// - last parameter --> maximum number of characters s1 can hold
+// char s1[5];
+// char s2[32] = "University of";
+// strncpy(s1, s2, sizeof(s1));
+// s1[4] = '\0'; --> ensuring string ends with a null character
 
 char *copy(char *dest, const char *src, int capacity) {
-
+    for (int i = 0; i < capacity; i++){
+        dest[i] = src[i];
+    }
+    dest[capacity] = '\0';
 
     return dest;
 }
