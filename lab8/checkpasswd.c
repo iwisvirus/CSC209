@@ -93,12 +93,8 @@ int main(void) {
     }else {
         exit(2);
     }
-    
 
   }
-  
-
-
 
   return 0;
 }
