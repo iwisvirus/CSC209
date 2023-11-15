@@ -7,6 +7,7 @@
 #define BMP_HEADER_SIZE_OFFSET 10
 #define BMP_WIDTH_OFFSET 18
 #define BMP_HEIGHT_OFFSET 22
+#define SCALE_FACTOR scale_factor
 
 typedef struct {
     unsigned char blue;
@@ -30,7 +31,7 @@ typedef struct {
  * the filters for this assignment.
  */
 void run_filter(void (*filter)(Bitmap *), int scale_factor);
-
+void scale(Bitmap *bmp, int scale_factor) ;
 // Macros and functions for performing the two multi-row filters.
 #define max(a,b) ((a) > (b) ? (a) : (b))
 #define min(a,b) ((a) < (b) ? (a) : (b))
