@@ -4,40 +4,60 @@
 #include <string.h>
 #include "bitmap.h"
 
+#define MAXHEADER 1024
 
-/*
- * Read in bitmap header data from stdin, and return a pointer to
- * a new Bitmap struct containing the important metadata for the image file.
- *
- * TODO: complete this function.
- *
- * Notes:
- *   1. Store header data in an array of unsigned char (essentially
- *      an array of bytes). Examples:
- *      on the stack,
- *          unsigned char data[10];
- *      on the heap,
- *          unsigned char *data = malloc(10);
- *
- *   2. Don't make any assumptions about the header size. You should read in
- *      BMP_HEADER_SIZE_OFFSET bytes first, and then the header size,
- *      and then use this to allocate enough space for the actual header.
- *
- *   3. You can use memcpy to transfer bytes to and from the Bitmap "header" field.
- *      You can even write these bytes to memory allocated for variables of other types!
- *      For example:
- *          unsigned char bytes[4];
- *          int x = 10;
- *          int y;
- *          memcpy(bytes, &x, 4);  // Copy the int x into bytes.
- *          memcpy(&y, bytes, 4);  // Copy the contents of bytes into y.
- *
- *   4. You can use either fread/fwrite or read/write to perform I/O operations here.
- *
- *   5. Make good use of the provided macros in bitmap.h to index into the "header" array.
- */
 Bitmap *read_header() {
-    return NULL;
+    //allocating space for bitmap pointer
+    Bitmap *bmp = malloc(sizeof(Bitmap*));
+    if(bmp == NULL){
+        fprintf(stderr, "Failed to allocate memory for Bitmap in read_header.\n");
+        exit(1);
+    }
+
+    //read in first 10 bytes
+    unsigned char bytes_0_9[BMP_HEADER_SIZE_OFFSET];
+    if(fread(bytes_0_9, 1, BMP_HEADER_SIZE_OFFSET, stdin) != BMP_HEADER_SIZE_OFFSET){
+        fprintf(stderr,"Failed to read bmp header.\n");
+        exit(1);
+    };
+    
+    //read in header size
+    unsigned char bytes_10_13[4];
+    if(fread(bytes_10_13, sizeof(int), 1, stdin) != 1){
+        fprintf(stderr, "Failed to read bmp header size.\n");
+        exit(1);
+    };
+    memcpy(&bmp -> headerSize, bytes_10_13, 4);
+
+    // allocate space for actual header
+    bmp -> header = malloc(bmp -> headerSize);
+    if (bmp -> header == NULL){
+        fprintf(stderr, "Failed to allocate memory for bmp headersize.\n");
+        exit(1);
+    }
+    //read in rest of header data
+    unsigned char bytes_rest[bmp -> headerSize - BMP_HEADER_SIZE_OFFSET - 4];
+    if(fread(bytes_rest, 1, bmp -> headerSize - BMP_HEADER_SIZE_OFFSET - 4, stdin) != bmp -> headerSize - BMP_HEADER_SIZE_OFFSET - 4){
+        fprintf(stderr, "Failed to read remaining bmp header data.\n");
+    };
+
+    memcpy(bmp -> header, bytes_0_9, BMP_HEADER_SIZE_OFFSET);
+    memcpy(bmp -> header + BMP_HEADER_SIZE_OFFSET, bytes_10_13, sizeof(int));
+    memcpy(bmp -> header + BMP_HEADER_SIZE_OFFSET + sizeof(int), bytes_rest, bmp -> headerSize - BMP_HEADER_SIZE_OFFSET - sizeof(bytes_10_13));
+
+    // read in height from header data
+    int height;
+    memcpy(&height, bmp -> header + BMP_HEIGHT_OFFSET, sizeof(int));
+
+    // read in width 
+    int width;
+    memcpy(&width, bmp -> header + BMP_WIDTH_OFFSET, sizeof(int));
+
+    bmp -> height = height;
+    bmp -> width = width;
+
+    return bmp;
+
 }
 
 /*
@@ -56,21 +76,18 @@ void free_bitmap(Bitmap *bmp) {
     free(bmp);
 }
 
-/*
- * Update the bitmap header to record a resizing of the image.
- *
- * TODO: complete this function when working on the "scale" filter.
- *
- * Notes:
- *   1. As with read_header, use memcpy and the provided macros in bitmap.h.
- *
- *   2. bmp->header *must* be updated, as this is what's written out
- *      in write_header.
- *
- *   3. You may choose whether or not to also update bmp->width and bmp->height.
- *      This choice may depend on how you implement the scale filter.
- */
-void scale(Bitmap *bmp, int scale_factor) {
+void scale(Bitmap *bmp, int GLOBAL_SCALE_FACTOR) {
+    int new_width = (bmp -> width) * GLOBAL_SCALE_FACTOR;
+    int new_height = (bmp -> height) * GLOBAL_SCALE_FACTOR;
+
+    bmp -> width = new_width;
+    bmp -> height = new_height;
+
+    int new_file_size = (bmp -> headerSize) + (new_width * new_height * sizeof(Pixel));
+    memcpy(bmp -> header + BMP_FILE_SIZE_OFFSET, &new_file_size, sizeof(int));
+    memcpy(bmp -> header + BMP_HEIGHT_OFFSET, &new_height, sizeof(int));
+    memcpy(bmp -> header + BMP_WIDTH_OFFSET, &new_width, sizeof(int));
+
 }
 
 
@@ -81,11 +98,11 @@ void scale(Bitmap *bmp, int scale_factor) {
  * You don't need to modify this function to make it work with any of
  * the filters for this assignment.
  */
-void run_filter(void (*filter)(Bitmap *), int scale_factor) {
+void run_filter(void (*filter)(Bitmap *), int GLOBAL_SCALE_FACTOR) {
     Bitmap *bmp = read_header();
 
-    if (scale_factor > 1) {
-        scale(bmp, scale_factor);
+    if (GLOBAL_SCALE_FACTOR > 1) {
+        scale(bmp, GLOBAL_SCALE_FACTOR);
     }
 
     write_header(bmp);

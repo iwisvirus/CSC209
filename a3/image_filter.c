@@ -38,11 +38,108 @@ void run_command(const char *cmd) {
 }
 
 
-// TODO: Complete this function.
 int main(int argc, char **argv) {
     if (argc < 3) {
         printf("Usage: image_filter input output [filter ...]\n");
         exit(1);
+    }
+
+    // Creating pipes
+    int filter[argc-3][2];
+    for (int i = 0; i < argc-4; i++) {
+        if (pipe(filter[i]) == -1) {
+            perror("Piping failed.\n");
+            exit(1);
+        }
+    }
+
+    for (int i = 0; i < argc - 3; i++) {
+        // creating forks
+        int pid = fork();
+
+        // error checking for forking
+        if (pid == 0) { 
+            // reading in from input file to first pipe
+            if (i == 0){
+                FILE *input_file = fopen(argv[1], "rb");
+                if(dup2(fileno(input_file), fileno(stdin)) == -1){
+                    perror("Failed to dup2 from input file to stdin.\n");
+                    exit(1);
+                };
+                if(fclose(input_file) == EOF){
+                    perror("Failed to close input file.\n");
+                };
+
+            // other child pipes     
+            }else{
+                if(dup2(filter[i-1][0], fileno(stdin)) == -1){
+                    perror("Failed to dup2 from pipe to stdin.\n");
+                    exit(1);
+                };
+                if(close(filter[i-1][0]) == -1){
+                    perror("Failed to close writing end of pipe.\n");
+                    exit(1);
+                };
+                if(close(filter[i-1][1]) == -1){
+                    perror("Failed to close reading end of pipe.\n");
+                    exit(1);
+                };
+            }
+            // last child process writing to output file and to stdout
+            if (i == argc - 4){
+                FILE *output_file = fopen(argv[2], "wb");
+                if(dup2(fileno(output_file), fileno(stdout)) == -1){
+                    perror("Failed to dup2 from pipe to stdout.\n");
+                    exit(1);
+                };
+                if(fclose(output_file) == -1){
+                    perror("Failed to close output file.\n");
+                    exit(1);
+                };
+            } else{
+                if(dup2(filter[i][1], fileno(stdout)) == -1){
+                    perror("Failed to dup2 from writing end to stdout.\n");
+                    exit(1);
+                };
+                if(close(filter[i][0]) == -1){
+                    perror("Failed to close reading end of pipe.\n");
+                    exit(1);
+                };
+                if(close(filter[i][1]) == -1){
+                    perror("Failed to close writing end of pipe.\n");
+                    exit(1);
+                };
+            }
+            run_command(argv[i+3]);
+        } else if (pid < 0) {
+            perror("Fork failed.\n");
+            exit(1);
+        }
+        // child processes
+    } 
+
+    // Close all pipe ends in the parent process
+    for (int i = 0; i < argc - 4; i++) {
+        if(close(filter[i][0]) == -1){
+            perror("Failed to close reading end of pipe.\n");
+            exit(1);
+        };
+        if(close(filter[i][1]) == -1){
+            perror("Failed to close writing end of pipe.\n");
+            exit(1);
+        };
+    }
+
+    for (int i = 0; i < argc - 3; ++i) {
+        int status;
+        if (wait(&status) == -1){
+            perror("Failed to execute wait.\n");
+            exit(1);
+        } 
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+            fprintf(stderr, ERROR_MESSAGE);
+            exit(EXIT_FAILURE);
+        }
     }
 
     printf(SUCCESS_MESSAGE);
