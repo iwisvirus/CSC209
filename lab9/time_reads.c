@@ -20,6 +20,10 @@ long num_reads, seconds;
  * The second argument is the name of a binary file containing 100 ints.
  * Assume both of these arguments are correct.
  */
+void handler(int code){
+  fprintf(stdout, MESSAGE, num_reads, seconds);
+  exit(0);
+}
 
 int main(int argc, char **argv) {
     if (argc != 3) {
@@ -34,11 +38,29 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
+    struct itimerval timer;
+    timer.it_value.tv_sec = seconds;
+    timer.it_value.tv_usec = 0;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = 0;
+    setitimer(ITIMER_PROF, &timer, NULL);
+
+    struct sigaction newact;
+    newact.sa_handler = handler;
+    newact.sa_flags = 0;
+    sigaction(SIGPROF, &newact, NULL);
+
     /* In an infinite loop, read an int from a random location in the file,
      * and print it to stderr.
      */
     for (;;) {
+      int num;
 
+      fseek(fp, rand() % 100 * sizeof(int), SEEK_SET);
+      fread(&num, sizeof(int),1, fp);
+      fprintf(stdout,"%d\n", num);
+
+      num_reads ++;
 
 
 
