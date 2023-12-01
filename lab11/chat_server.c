@@ -84,19 +84,22 @@ int read_from(int client_index, struct sockname *users) {
         }
         strncpy(users[client_index].username, buf, num_read);
     } else {
-        char cat_username[BUF_SIZE + 1];
-        strncpy(cat_username, users[client_index].username, BUF_SIZE);
-        strncat(cat_username, ": ", BUF_SIZE - strlen(cat_username));
-        strncat(cat_username, buf, BUF_SIZE - strlen(cat_username));
+        char new[BUF_SIZE + 1];
+        strncpy(new, users[client_index].username, BUF_SIZE);
+        strncat(new, ": ", BUF_SIZE - strlen(new));
+        strncat(new, buf, BUF_SIZE - strlen(new));
 
-        if (num_read == 0 || write(fd, cat_username, strlen(cat_username)) != strlen(cat_username)) {
-            perror("Error writing to client");
+        if (num_read == 0 || write(fd, new, strlen(new)) != strlen(new)) {
+            perror("Error writing.\n");
             users[client_index].sock_fd = -1;
             return fd;
         }
         for (int i = 0; i < MAX_CONNECTIONS; i++) {
             if (users[i].sock_fd != -1 && i != client_index) {
-                write(users[i].sock_fd, cat_username, strlen(cat_username));
+                if (write(users[i].sock_fd, new, strlen(new) != strlen(new))){
+                    perror("Error writing.\n");
+                    exit(1);
+                };
             }
         }
     }
