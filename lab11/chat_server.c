@@ -67,15 +67,38 @@ int read_from(int client_index, struct sockname *users) {
     int fd = users[client_index].sock_fd;
     char buf[BUF_SIZE + 1];
 
-    /* In Lab 10, you focused on handling partial reads. For this lab, you do
-     * not need handle partial reads. Because of that, this server program
-     * does not check for "\r\n" when it reads from the client.
-     */
+    // Check for read errors
     int num_read = read(fd, &buf, BUF_SIZE);
+    if (num_read < 0) {
+        // Handle read error
+        perror("Error reading from client");
+        exit(1);
+    }
     buf[num_read] = '\0';
-    if (num_read == 0 || write(fd, buf, strlen(buf)) != strlen(buf)) {
-        users[client_index].sock_fd = -1;
-        return fd;
+
+    if (users[client_index].username == NULL) {
+        users[client_index].username = malloc((num_read + 1) * sizeof(char));
+        if (users[client_index].username == NULL) {
+            perror("Memory not allocated for username.\n");
+            exit(1);
+        }
+        strncpy(users[client_index].username, buf, num_read);
+    } else {
+        char cat_username[BUF_SIZE + 1];
+        strncpy(cat_username, users[client_index].username, BUF_SIZE);
+        strncat(cat_username, ": ", BUF_SIZE - strlen(cat_username));
+        strncat(cat_username, buf, BUF_SIZE - strlen(cat_username));
+
+        if (num_read == 0 || write(fd, cat_username, strlen(cat_username)) != strlen(cat_username)) {
+            perror("Error writing to client");
+            users[client_index].sock_fd = -1;
+            return fd;
+        }
+        for (int i = 0; i < MAX_CONNECTIONS; i++) {
+            if (users[i].sock_fd != -1 && i != client_index) {
+                write(users[i].sock_fd, cat_username, strlen(cat_username));
+            }
+        }
     }
 
     return 0;
