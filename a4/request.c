@@ -138,7 +138,7 @@ int parse_req_start_line(ClientState *client) {
         return 0;
     }
 
-    char *first_line = malloc(MAXLINE);
+    char *first_line = malloc(sizeof(char)*MAXLINE);
     if (first_line == NULL){
         fprintf(stderr, "Memory not allocated for first line.\n");
         exit(1);
