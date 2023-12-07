@@ -26,39 +26,62 @@
  * determine the type of request, spawn a child process to respond to the 
  * request.
  *
- * Return 1 if one of the conditions hold:
- *   a) No bytes were read from the socket. (The client has likely closed the 
- *      connection.)
- *   b) A child process has been created to respond to the request.
- *
  * This return value indicates that the server process should close the socket.
  * Otherwise, return 0 (indicating that the server must continue to monitor the 
  * socket).
- *
- * Complete this function according to the comments within.
- * Note that you'll be doing this incrementally, adding to the function as you
- * complete the different parts of the assignment.
  */
 int handle_client(ClientState *client) {
     // Read in data from the client's socket into its buffer, 
     // and update num_bytes. If no bytes were read, return 1.
+    // no bytes read
+    if (read_from_client(client) < 1){
+        return 1;
+    }
+    // full line not read
+    if (parse_req_start_line(client) == 0){
+        return 0;
+    }
+
 
     //IMPLEMENT THIS
 
-    // At this point client->reqData is not null, and so we are guaranteed
-    // to spawn a child process to handle the request (so we return 1).
+    // spawn a child process to respond to the request (so we return 1).
     // First, call fork. In the *parent* process, just return 1.
     // In the *child* process, check the values in client->reqData to determine
     // how to respond to the request.
     // The child should call exit(0) (rather than return) to prevent it from
     // executing the main server loop that listens for new requests.
 
+    int pid = fork();
 
-    //IMPLEMENT THIS
-
-
+    // parent process returning 1
+    if (pid > 0){
+        return 1;
+        
+    // child process checking values in client -> reqData to determine how to respond
+    }else if (pid == 0) {
+        if (strcmp(client -> reqData -> method, GET) == 0){
+            if (strcmp(client -> reqData -> path, MAIN_HTML) == 0){
+                main_html_response(client -> sock);
+            }
+            else if(strcmp(client -> reqData -> path, IMAGE_FILTER) == 0){
+                image_filter_response(client -> sock, client -> reqData); 
+            }
+        }else if (strcmp(client -> reqData -> method, POST) == 0){
+            if (strcmp(client -> reqData -> path, IMAGE_UPLOAD) == 0){
+                image_upload_response(client);
+            }
+        }
+        else {
+            not_found_response(client -> sock);
+        }
+        exit(0);
+    }else{
+        perror("Failed to create child process.\n");
+        exit(1);
+    }
     close(client->sock);
-    exit(0);
+    // exit(0);
 }
 
 

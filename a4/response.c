@@ -86,7 +86,85 @@ void write_image_list(int fd) {
  */
 void image_filter_response(int fd, const ReqData *reqData) {
 
-    // IMPLEMENT THIS
+    char filter_dir[strlen(FILTER_DIR) + 1];
+    memset(filter_dir, '\0', strlen(FILTER_DIR) + 1);
+    strcpy(filter_dir, FILTER_DIR);
+
+    char image_dir[strlen(IMAGE_DIR) + 1];
+    memset(image_dir, '\0', strlen(IMAGE_DIR) + 1);
+    strcpy(image_dir, IMAGE_DIR);
+
+    char *filter_path = malloc(sizeof(char) * MAXLINE);
+    if (filter_path == NULL){
+        perror("Memory not allocated.\n");
+        exit(1);
+    }
+    memset(filter_path,'\0', MAXLINE);
+    strcpy(filter_path, filter_dir);
+
+    char *image_path = malloc(sizeof(char) * MAXLINE);
+    if(image_path == NULL){
+        perror("Memory not allocated.\n");
+        exit(1);
+    }
+    memset(image_path, '\0', MAXLINE);
+    strcpy(image_path, image_dir);
+    printf("%s\n", image_path);
+
+    int filter_index = -1;
+    int image_index = -1;
+
+    for (int i = 0; i < MAX_QUERY_PARAMS; i++){
+        if (strcmp(reqData -> params[i].name, "filter") == 0 && filter_index == -1){
+            if (strchr(reqData -> params[i].value, '/') == NULL){
+                strcat(filter_path, reqData->params[i].value);
+                if (access(filter_path, X_OK) == 0){
+                    filter_index = i;
+                }else{
+                    bad_request_response(fd, "Filter does not exist.\n");
+                    exit(1);
+                }
+            }
+            else{
+                bad_request_response(fd, "Incorrect format of filter name.\n");
+                exit(1);
+            } 
+        }else if (strcmp(reqData -> params[i].name, "image") == 0 && image_index == -1){
+            if (strchr(reqData -> params[i].value, '/') == NULL){
+                strcat(image_path, reqData -> params[i].value);
+                if (access(image_path, R_OK) == 0){
+                    image_index = i;   
+                } else{
+                    bad_request_response(fd, "Image does not exist.\n");
+                    printf("%s\n", image_path);
+                    exit(1);                
+                }     
+            } else{
+                bad_request_response(fd, "Incorrect format of image name.\n");
+                exit(1);       
+            }
+        }
+        if (image_index != -1 && filter_index != -1){
+            break;
+        }
+    }
+
+    if (image_index != -1 && filter_index != -1){
+        write_image_response_header(fd);
+        FILE *image = fopen(image_path, "rb");
+        if (image == NULL){
+            perror("Cannot open image file.\n");
+            exit(1);
+        }
+        dup2(fileno(image), STDIN_FILENO);
+        dup2(fd, STDOUT_FILENO);
+
+        execl(filter_path, filter_path, NULL);
+        fclose(image);
+    }
+    free(filter_path);
+    free(image_path);
+
 }
 
 

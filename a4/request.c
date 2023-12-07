@@ -42,9 +42,14 @@ void remove_client(ClientState *cs) {
  * Definitely do not use strchr or any other string function in here. (Why not?)
  */
 int find_network_newline(const char *buf, int inbuf) {
-    
-    //IMPLEMENT THIS
-
+    if (buf == NULL){
+        return -1;
+    }
+    for (int i = 0; i < inbuf - 1; i++){
+        if (buf[i] == '\r' && buf[i + 1] == '\n'){
+            return i + 2;
+        }
+    }
     return -1;
 }
 
@@ -57,9 +62,22 @@ int find_network_newline(const char *buf, int inbuf) {
  * Remember that the client buffer is *not* null-terminated automatically.
  */
 void remove_buffered_line(ClientState *client) {
-    
-    
-    //IMPLEMENT THIS
+    // IMPLEMENT THIS
+
+    // if client buf is empty
+    if (client -> num_bytes == 0){
+        memset(&client -> buf, '\0', MAXLINE);
+    }
+
+    // index of new line
+    int new_line_index = find_network_newline(client -> buf, client -> num_bytes);
+
+    // update num_bytes
+    client -> num_bytes = client -> num_bytes - new_line_index;
+
+    // move it to the beginning of buf
+    memmove(client -> buf, client -> buf + new_line_index, client -> num_bytes);
+    memset(client -> buf + client -> num_bytes, '\0', MAXLINE - client -> num_bytes);
 
 }
 
@@ -72,13 +90,26 @@ void remove_buffered_line(ClientState *client) {
  * Be very careful with memory here: there might be existing data in the buffer
  * that you don't want to overwrite, and you also don't want to go past
  * the end of the buffer, and you should ensure the string is null-terminated.
+ * 
+ * Each call to read from client, should try to read in the 
+ * available space in the buffer 
+ * (no more than MAXLINE - client->num_bytes). 
+ *  
  */
 int read_from_client(ClientState *client) {
-    
-    //IMPLEMENT THIS
-    
-    // replace the return line with something more appropriate
-    return -1;
+    if (client -> num_bytes == MAXLINE - 1){
+        perror("Buffer full.\n");
+        return -1;
+    }
+    int bytes = read(client -> sock, client -> buf + client -> num_bytes, MAXLINE - 1 - client -> num_bytes);
+    if (bytes < 0){
+        perror("Cannot read from socket.\n");
+        return -1;
+    }
+    client -> num_bytes = client -> num_bytes + bytes;
+    client -> buf[client -> num_bytes] = '\0';
+
+    return bytes;
 }
 
 
@@ -97,11 +128,118 @@ void log_request(const ReqData *req);
  * Return 0 if a full line has not been read, 1 otherwise.
  */
 int parse_req_start_line(ClientState *client) {
-
     //IMPLEMENT THIS
 
+    // if there is a full line terminated by a network newline (CRLF)
+    int full_line = find_network_newline(client -> buf, client -> num_bytes);
+    //double check 
+    if (full_line == -1){
+        perror("Full line not terminated by a network newline.\n");
+        return 0;
+    }
+
+    char *first_line = malloc(MAXLINE);
+    if (first_line == NULL){
+        fprintf(stderr, "Memory not allocated for first line.\n");
+        exit(1);
+    }
+
+    strcpy(first_line, client -> buf);
+    first_line[full_line - 2] = '\0';
+
+    // client -> reqdata -> method = "GET" or "POST"
+    char method[5];
+    memset(method, '\0', sizeof(method));
+    client -> reqData = malloc(sizeof(ReqData));
+    if (client -> reqData == NULL){
+        fprintf(stderr, "Memory not allocated for reqData.\n");
+        free(client -> reqData);
+        exit(1);
+    }
+    memset(client -> reqData, '\0', sizeof(ReqData));
+    // GET
+    if (strstr(first_line, GET) != NULL){
+        strcpy(method, GET);
+        client -> reqData -> method = malloc(sizeof(char) * strlen(method) + 1);
+        strcpy(client -> reqData -> method, method);
+
+    // POST
+    }else if(strstr(first_line, POST) != NULL){
+        strcpy(method, POST);
+        client -> reqData -> method = malloc(sizeof(char) * strlen(method) + 1);
+        if (client -> reqData -> method == NULL){
+        fprintf(stderr, "Memory not allocated for method.\n");
+        exit(1);
+    }
+        strcpy(client -> reqData -> method, method);
+
+    // not both
+    }else{
+        perror("Method cannot be read. Should be POST or GET.\n");
+        return 0;
+    }
+
+    // client -> reqdata -> path 
+    if (strstr(first_line, "/") != NULL){
+        // if there is / and ?
+        if (strstr(first_line, "?") != NULL){
+            if (strcmp(client -> reqData -> method, GET) == 0){
+                // setting reqData -> path
+                char target[MAXLINE];
+                char *path_token_with_slash = strstr(first_line, "/");
+                char *path_token_with_question = strtok(path_token_with_slash, "?");
+
+                memset(target, '\0', sizeof(target));
+                strcpy(target, path_token_with_question);
+
+                client -> reqData -> path = malloc(sizeof(char) * strlen(target) + 1);
+                if (client -> reqData -> path == NULL){
+                    fprintf(stderr, "Memory not allocated in filter.\n");
+                    exit(1);
+                }
+                strcpy(client -> reqData -> path, target);
+
+                // setting reqData -> param
+                char name_value[MAXLINE];
+                char *param_token = strtok(NULL, "?");
+
+                memset(name_value, '\0', sizeof(name_value));
+                strncpy(name_value, param_token, strlen(param_token) - strlen(" HTTP/1.1"));
+                // name_value[strlen(name_value)] = '\0';
+                parse_query(client -> reqData, name_value);
+
+
+            }
+            else{
+                perror("Method should be GET to have name-value pairs./n");
+                return 0;
+            }
+        
+        // if there is / but no ?
+        }else {
+            char target[MAXLINE];
+            char *token = strstr(first_line, "/"); 
+
+            memset(target, '\0', MAXLINE);
+            strncpy(target, token, strlen(token) - strlen(" HTTP/1.1"));
+            // target[strlen(target)] = '\0';
+            client -> reqData -> path = malloc(sizeof(char) * strlen(target));
+            if (client -> reqData -> path == NULL){
+                fprintf(stderr, "Memory not allocated in copy_filter.\n");
+                exit(1);
+    }
+            strcpy(client -> reqData -> path, target);
+        }
+    // if there is no /
+    }else {
+        perror("HTTP request start line not correct.\n");
+        return 0;
+    }
+
+    free(first_line);
 
     // This part is just for debugging purposes.
+    ReqData *req = client -> reqData;
     log_request(req);
     return 1;
 }
@@ -114,11 +252,47 @@ int parse_req_start_line(ClientState *client) {
  * e.g., name1=value1&name2=value2.
  */
 void parse_query(ReqData *req, const char *str) {
-    
-    //IMPLEMENT THIS
 
+    // IMPLEMENT THIS
+    char copy[strlen(str) + 1];
+    strcpy(copy, str);
+
+    char *token = strtok(copy, "&");
+    int query = 0;
+
+    while(token != NULL && query < MAX_QUERY_PARAMS){
+        // name1=value1
+        char name_value[strlen(token) + 1];
+        strcpy(name_value, token);
+
+        char name[MAXLINE];
+        char value[MAXLINE];
+        char *v = strstr(name_value, "="); 
+
+        memset(value, '\0', sizeof(value));
+        strcpy(value, v + 1);
+
+        memset(name, '\0', sizeof(name));
+        strncpy(name, name_value, strlen(name_value) - strlen(v));
+
+        if(name != NULL){
+            req -> params[query].name = malloc(sizeof(char) * strlen(name) + 1);
+            if (req -> params[query].name == NULL){
+                fprintf(stderr, "Memory not allocated in copy_filter.\n");
+                exit(1);
+                }
+            req -> params[query].value = malloc(sizeof(char) * strlen(value) + 1);
+            if (req -> params[query].value == NULL){
+                fprintf(stderr, "Memory not allocated in copy_filter.\n");
+                exit(1);
+            } 
+            strcpy(req -> params[query].name, name);
+            strcpy(req -> params[query].value, value);
+            query ++;
+        token = strtok(NULL, "&");
+    }
 }
-
+}
 
 
 
@@ -214,15 +388,47 @@ char *get_bitmap_filename(ClientState *client, const char *boundary) {
  *    - search for the boundary string in each chunk of data read 
  * (Remember the "\r\n" that comes before the boundary string, and the 
  * "--\r\n" that comes after.)
- *    - extract the file size from the bitmap data, and use that to determine
- * how many bytes to read from the socket and write to the file
  */
 int save_file_upload(ClientState *client, const char *boundary, int file_fd) {
     // Read in the next two lines: Content-Type line, and empty line
     remove_buffered_line(client);
     remove_buffered_line(client);
-
     // IMPLEMENT THIS
-    
+
+    char *last_line = malloc(sizeof(char) * (strlen(boundary) + 6));
+    strcpy(last_line, "\r\n");
+    strcat(last_line, boundary);
+    strcat(last_line, "--\r\n");
+
+    int w = write(file_fd, client -> buf, sizeof(char) * client -> num_bytes);
+    if (w < 0){
+        perror("Could not write first data to file descriptor.\n");
+        exit(1);
+    }
+
+    while(1){
+        int bytes_read = read(client -> sock, client -> buf, MAXLINE);
+        if (bytes_read < 0){
+            perror("Could not read from socket.\n");
+            exit(1);
+        }
+        char *compare = strstr(client -> buf, last_line);
+        if (compare != NULL){
+            int w = write(file_fd, client -> buf, sizeof(char) * bytes_read);
+            if (w < 0){
+                perror("Could not write last line to file descriptor.\n");
+                exit(1);
+            }
+            break;
+        } else{
+            int w = write(file_fd, client -> buf, sizeof(char) * bytes_read);
+            if (w < 0){
+                perror("Could not write data to file descriptor.\n");
+                exit(1);
+            }
+        }
+    }
+
+    free(last_line);
     return 0;
 }
