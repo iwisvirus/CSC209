@@ -30,7 +30,9 @@ typedef struct kar_tree {
 // In kar_tree.c
 void free_tree(arch_tree_node *root);
 void only_filename(char* filepath);
-void valid_path(char path_buffer[], char *directory, char *filename);
+// void valid_path(char path_buffer[], char *directory, char *filename);
+// int buffered_read_write(FILE *input, FILE *output, size_t read_remaining, size_t
+// buffer_size);
 
 /*
  * We often create .h files for everything, but for this project we're
@@ -38,6 +40,7 @@ void valid_path(char path_buffer[], char *directory, char *filename);
 */
 // In archive.c
 int create_archive(char *archive_name, int num_files, char *files_to_add[num_files]);
+int recursively_add(char *path, arch_tree_node **current, char *archive);
 
 // In extract.c
 int extract_archive(char *archive_name);

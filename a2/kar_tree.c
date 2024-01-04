@@ -30,6 +30,7 @@ void only_filename(char* filepath){
 
     if(filepath[total_chars - 1] == '/'){
         filepath[total_chars - 1] = '\0';
+
     }
 
     char* filename = strrchr(filepath, '/');
@@ -50,4 +51,35 @@ void valid_path(char path_buffer[], char *directory, char *filename){
     }
     strcat(path_buffer, filename);
 }
+
+// int buffered_read_write(FILE *input, FILE *output, size_t read_remaining, size_t
+// buffer_size){
+// char *buffer = malloc(buffer_size);
+// if (!buffer) {
+// perror("Failed to allocate memory for buffer");
+// return -1;
+// }
+// // printf("Reading %zu bytes\n", read_remaining);
+// size_t bytes_read;
+// size_t next_read_size = buffer_size < read_remaining ? buffer_size :
+// read_remaining;
+// while (read_remaining > 0 && (bytes_read = fread(buffer, 1, next_read_size,
+// input)) > 0) {
+// // printf("Read %zu bytes\n", bytes_read);
+// int to_write = bytes_read;
+// char *buf_pt = buffer;
+// while(to_write > 0){
+// size_t num_written = fwrite(buf_pt, 1, to_write, output);
+// // printf("Wrote %zu bytes\n", num_written);
+// to_write -= num_written;
+// buf_pt += num_written;
+// }
+// read_remaining -= bytes_read;
+// next_read_size = buffer_size < read_remaining ? buffer_size :
+// read_remaining;
+// }
+// free(buffer);
+// return 0;
+// }
+
 // WARNING
